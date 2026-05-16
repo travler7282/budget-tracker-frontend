@@ -3,6 +3,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "module": "ES2022",
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
     "outDir": "./out-tsc/spec",
     "types": ["vitest/globals"]
   },

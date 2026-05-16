@@ -185,7 +185,11 @@
     <section class="card items-card">
       <div class="items-header">
         <h3>Items</h3>
-        <select [value]="selectedTypeFilter()" (change)="setTypeFilter($any($event.target).value)">
+        <select
+          title="Filter budget items by type"
+          [value]="selectedTypeFilter()"
+          (change)="setTypeFilter($any($event.target).value)"
+        >
           <option value="all">All Types</option>
           @for (type of budgetTypes; track type) {
             <option [value]="type">{{ type | titlecase }}</option>
@@ -198,9 +202,9 @@
       } @else if (items().length === 0) {
         <p>No budget items yet.</p>
       } @else {
-        <ul class="item-list">
+        <div class="item-list" role="list">
           @for (item of items(); track item.id) {
-            <li>
+            <div role="listitem">
               <article>
                 <div class="item-main">
                   <h4>{{ item.name }}</h4>
@@ -214,9 +218,9 @@
                   </button>
                 </div>
               </article>
-            </li>
+            </div>
           }
-        </ul>
+        </div>
       }
     </section>
   </div>
@@ -225,7 +229,11 @@
     <div class="calendar-header">
       <h3>Cash Flow Calendar</h3>
       <div class="calendar-controls">
-        <select [value]="calendarView()" (change)="setCalendarView($any($event.target).value)">
+        <select
+          title="Select calendar range view"
+          [value]="calendarView()"
+          (change)="setCalendarView($any($event.target).value)"
+        >
           <option value="day">Daily</option>
           <option value="week">Weekly</option>
           <option value="month">Monthly</option>
@@ -318,9 +326,9 @@
         @if (categoryChart().length === 0) {
           <p class="muted">No data yet.</p>
         } @else {
-          <ul class="category-bars">
+          <div class="category-bars" role="list">
             @for (bar of categoryChart(); track bar.label) {
-              <li>
+              <div role="listitem">
                 <div class="bar-label">
                   <span>{{ bar.label }}</span>
                   <strong>{{ bar.total | currency }}</strong>
@@ -328,9 +336,9 @@
                 <div class="bar-track">
                   <div class="bar-fill" [style.width.%]="bar.widthPercent"></div>
                 </div>
-              </li>
+              </div>
             }
-          </ul>
+          </div>
         }
       </article>
 
