@@ -1,0 +1,93 @@
+.users-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #d6e4ee;
+  border-radius: 16px;
+  padding: 1rem;
+}
+
+.error-banner {
+  background: #fde9e9;
+  border: 1px solid #efb3b3;
+  color: #8a1d1d;
+  padding: 0.75rem;
+  border-radius: 10px;
+}
+
+.create-grid,
+.edit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.7rem;
+  align-items: end;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  border: 1px solid #a9bfce;
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border-bottom: 1px solid #dfebf4;
+  text-align: left;
+  padding: 0.5rem;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.btn {
+  border: 1px solid #7a9aae;
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  background: #f2f8fc;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #005f8f;
+  color: #fff;
+  border-color: #005f8f;
+}
+
+.btn.danger {
+  border-color: #a74343;
+  color: #a74343;
+}
+
+.btn.small {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.83rem;
+}
+
+.action-row {
+  display: flex;
+  gap: 0.5rem;
+}

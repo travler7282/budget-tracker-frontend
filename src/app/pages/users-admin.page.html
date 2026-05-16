@@ -1,0 +1,114 @@
+<section class="users-page">
+  <header>
+    <h2>Admin · User Management</h2>
+    <p>Create, update, and remove users. Non-admins cannot access this page.</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner">{{ error() }}</p>
+  }
+
+  <section class="card">
+    <h3>Create User</h3>
+    <form [formGroup]="createForm" (ngSubmit)="createUser()" class="create-grid">
+      <label>
+        Username
+        <input type="text" formControlName="username" />
+      </label>
+      <label>
+        Password
+        <input type="password" formControlName="password" />
+      </label>
+      <label>
+        Role
+        <select formControlName="role">
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+      <button class="btn primary" type="submit">Create User</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h3>Existing Users</h3>
+
+    @if (loading()) {
+      <p>Loading users...</p>
+    } @else if (users().length === 0) {
+      <p>No users found.</p>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Active</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of users(); track user.id) {
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.is_active ? 'Yes' : 'No' }}</td>
+                <td>{{ user.created_at | date: 'medium' }}</td>
+                <td class="actions">
+                  <button class="btn small" type="button" (click)="beginEdit(user)">Edit</button>
+                  <button
+                    class="btn small danger"
+                    type="button"
+                    [disabled]="isCurrentUser(user)"
+                    (click)="deleteUser(user)"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+
+  @if (editingUserId()) {
+    <section class="card">
+      <h3>Edit User #{{ editingUserId() }}</h3>
+      <form [formGroup]="editForm" (ngSubmit)="saveUser()" class="edit-grid">
+        <label>
+          Username
+          <input type="text" formControlName="username" />
+        </label>
+
+        <label>
+          New Password (optional)
+          <input type="password" formControlName="password" />
+        </label>
+
+        <label>
+          Role
+          <select formControlName="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+
+        <label>
+          <input type="checkbox" formControlName="is_active" />
+          Active
+        </label>
+
+        <div class="action-row">
+          <button class="btn primary" type="submit">Save</button>
+          <button class="btn" type="button" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </form>
+    </section>
+  }
+</section>

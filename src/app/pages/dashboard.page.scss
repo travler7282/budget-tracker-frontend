@@ -1,33 +1,48 @@
-.card {
-  max-width: 38rem;
-  margin: 2rem auto;
-  padding: 1.5rem;
-  border: 1px solid #d2dce3;
-  border-radius: 14px;
-  background: #fff;
-}
-
-dl {
+.dashboard-page {
   display: grid;
-  grid-template-columns: 9rem 1fr;
-  gap: 0.6rem 1rem;
+  gap: 1rem;
 }
 
-dt {
-  font-weight: 700;
+.card {
+  border: 1px solid #d6e3ec;
+  border-radius: 16px;
+  background: #fff;
+  padding: 1rem;
 }
 
-dd {
-  margin: 0;
+.hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f2f9ff 100%);
 }
 
-button {
-  margin-top: 1rem;
-  padding: 0.6rem 1rem;
-  border: none;
+.quick-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: 1px solid #7a9aae;
   border-radius: 10px;
-  background: #003a5a;
+  padding: 0.45rem 0.85rem;
+  background: #f2f8fc;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #005f8f;
   color: #fff;
+  border-color: #005f8f;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+.summary-card h3 {
+  margin-top: 0;
 }
 
 .error {

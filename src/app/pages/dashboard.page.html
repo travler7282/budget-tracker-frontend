@@ -1,22 +1,32 @@
-<section class="card">
-  <h2>Dashboard</h2>
+<section class="dashboard-page">
+  <article class="hero card">
+    <h2>Welcome back</h2>
+    @if (loading()) {
+      <p>Loading profile...</p>
+    } @else if (error()) {
+      <p class="error">{{ error() }}</p>
+    } @else if (user()) {
+      <p>
+        You are signed in as <strong>{{ user()!.username }}</strong> ({{ user()!.role }}).
+      </p>
+      <div class="quick-actions">
+        <button type="button" class="btn primary" (click)="gotoPlanner()">Open Planner</button>
+        @if (user()!.role === 'admin') {
+          <button type="button" class="btn" (click)="gotoAdminUsers()">Manage Users</button>
+        }
+        <button type="button" class="btn" (click)="logout()">Sign out</button>
+      </div>
+    }
+  </article>
 
-  @if (loading()) {
-    <p>Loading profile...</p>
-  } @else if (error()) {
-    <p class="error">{{ error() }}</p>
-  } @else if (user()) {
-    <dl>
-      <dt>Username</dt>
-      <dd>{{ user()!.username }}</dd>
-      <dt>Role</dt>
-      <dd>{{ user()!.role }}</dd>
-      <dt>Status</dt>
-      <dd>{{ user()!.is_active ? 'Active' : 'Inactive' }}</dd>
-      <dt>Created</dt>
-      <dd>{{ user()!.created_at | date: 'medium' }}</dd>
-    </dl>
-  }
-
-  <button type="button" (click)="logout()">Sign out</button>
+  <section class="summary-grid">
+    @for (row of summary(); track row.itemType) {
+      <article class="card summary-card">
+        <h3>{{ row.itemType | titlecase }}</h3>
+        <p>{{ row.itemCount }} items</p>
+        <p>Planned {{ row.plannedTotal | currency }}</p>
+        <p>Actual {{ row.actualTotal | currency }}</p>
+      </article>
+    }
+  </section>
 </section>

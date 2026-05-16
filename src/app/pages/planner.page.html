@@ -1,0 +1,215 @@
+<section class="planner-page">
+  <header class="page-top">
+    <h2>Budget Planner</h2>
+    <p>Manage your budget items and review projected vs actual cash flow.</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner">{{ error() }}</p>
+  }
+
+  <div class="summary-cards">
+    @for (summary of summaries(); track summary.itemType) {
+      <article class="card summary-card">
+        <h3>{{ summary.itemType | titlecase }}</h3>
+        <p>
+          <strong>{{ summary.itemCount }}</strong> items
+        </p>
+        <p>Planned: {{ summary.plannedTotal | currency }}</p>
+        <p>Actual: {{ summary.actualTotal | currency }}</p>
+      </article>
+    }
+  </div>
+
+  <div class="layout-grid">
+    <section class="card item-form-card">
+      <h3>{{ formTitle() }}</h3>
+      <form [formGroup]="form" (ngSubmit)="submitItem()" class="form-grid">
+        <label>
+          Name
+          <input type="text" formControlName="name" />
+        </label>
+
+        <label>
+          Type
+          <select formControlName="itemType">
+            @for (type of budgetTypes; track type) {
+              <option [value]="type">{{ type | titlecase }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Category
+          <input type="text" formControlName="category" />
+        </label>
+
+        <label>
+          Budgeted Amount
+          <input type="number" step="0.01" formControlName="budgetedAmount" />
+        </label>
+
+        <label>
+          Actual Amount
+          <input type="number" step="0.01" formControlName="actualAmount" />
+        </label>
+
+        <label>
+          Budgeted Date
+          <input type="date" formControlName="budgetedDate" />
+        </label>
+
+        <label>
+          Actual Date
+          <input type="date" formControlName="actualDate" />
+        </label>
+
+        <label class="full-row">
+          Description
+          <textarea rows="3" formControlName="description"></textarea>
+        </label>
+
+        <div class="toggle-row full-row">
+          <label><input type="checkbox" formControlName="isExpense" /> Expense</label>
+          <label><input type="checkbox" formControlName="isIncome" /> Income</label>
+          <label><input type="checkbox" formControlName="isLoan" /> Loan</label>
+          <label><input type="checkbox" formControlName="isCreditCard" /> Credit Card</label>
+        </div>
+
+        <div class="form-actions full-row">
+          <button class="btn primary" type="submit" [disabled]="saving()">
+            {{ selectedItemId() ? 'Save Changes' : 'Create Item' }}
+          </button>
+          <button class="btn ghost" type="button" (click)="clearForm()">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card items-card">
+      <div class="items-header">
+        <h3>Items</h3>
+        <select [value]="selectedTypeFilter()" (change)="setTypeFilter($any($event.target).value)">
+          <option value="all">All Types</option>
+          @for (type of budgetTypes; track type) {
+            <option [value]="type">{{ type | titlecase }}</option>
+          }
+        </select>
+      </div>
+
+      @if (loading()) {
+        <p>Loading items...</p>
+      } @else if (items().length === 0) {
+        <p>No budget items yet.</p>
+      } @else {
+        <ul class="item-list">
+          @for (item of items(); track item.id) {
+            <li>
+              <article>
+                <div class="item-main">
+                  <h4>{{ item.name }}</h4>
+                  <p>{{ item.category || 'Uncategorized' }} · {{ item.itemType | titlecase }}</p>
+                  <p>{{ item.budgetedAmount | currency }} planned</p>
+                </div>
+                <div class="item-actions">
+                  <button class="btn small" type="button" (click)="editItem(item)">Edit</button>
+                  <button class="btn small danger" type="button" (click)="removeItem(item)">
+                    Delete
+                  </button>
+                </div>
+              </article>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  <section class="card calendar-card">
+    <div class="calendar-header">
+      <h3>Cash Flow Calendar</h3>
+      <div class="calendar-controls">
+        <select [value]="calendarView()" (change)="setCalendarView($any($event.target).value)">
+          <option value="day">Daily</option>
+          <option value="week">Weekly</option>
+          <option value="month">Monthly</option>
+          <option value="year">Yearly</option>
+          <option value="custom">Custom range</option>
+        </select>
+
+        <label>
+          Anchor date
+          <input
+            type="date"
+            [value]="referenceDate()"
+            (input)="setReferenceDate($any($event.target).value)"
+          />
+        </label>
+
+        <label>
+          Starting balance
+          <input
+            type="number"
+            step="0.01"
+            [value]="startingBalance()"
+            (input)="setStartingBalance($any($event.target).value)"
+          />
+        </label>
+      </div>
+    </div>
+
+    @if (calendarView() === 'custom') {
+      <div class="custom-range">
+        <label>
+          Start
+          <input
+            type="date"
+            [value]="customStartDate()"
+            (input)="setCustomRangeStart($any($event.target).value)"
+          />
+        </label>
+        <label>
+          End
+          <input
+            type="date"
+            [value]="customEndDate()"
+            (input)="setCustomRangeEnd($any($event.target).value)"
+          />
+        </label>
+        <button class="btn" type="button" (click)="applyCustomRange()">Apply Range</button>
+      </div>
+    }
+
+    @if (calendarLoading()) {
+      <p>Loading cash flow...</p>
+    } @else if (calendarDays().length === 0) {
+      <p>No cash flow rows for this range.</p>
+    } @else {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Planned Net</th>
+              <th>Actual Net</th>
+              <th>Planned Balance</th>
+              <th>Actual Balance</th>
+              <th>Items</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (day of calendarDays(); track day.date) {
+              <tr>
+                <td>{{ day.date | date: 'mediumDate' }}</td>
+                <td>{{ day.plannedNet | currency }}</td>
+                <td>{{ day.actualNet | currency }}</td>
+                <td>{{ day.plannedBalance | currency }}</td>
+                <td>{{ day.actualBalance | currency }}</td>
+                <td>{{ day.items.length }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>

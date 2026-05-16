@@ -7,7 +7,7 @@ export interface TokenResponse {
 export interface CurrentUser {
   id: number;
   username: string;
-  role: string;
+  role: 'user' | 'admin';
   is_active: boolean;
   created_at: string;
 }
