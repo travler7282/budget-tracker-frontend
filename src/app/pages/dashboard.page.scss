@@ -1,0 +1,35 @@
+.card {
+  max-width: 38rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #d2dce3;
+  border-radius: 14px;
+  background: #fff;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.6rem 1rem;
+}
+
+dt {
+  font-weight: 700;
+}
+
+dd {
+  margin: 0;
+}
+
+button {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: #003a5a;
+  color: #fff;
+}
+
+.error {
+  color: #9a1a1a;
+}

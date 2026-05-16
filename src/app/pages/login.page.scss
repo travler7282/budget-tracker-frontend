@@ -1,0 +1,40 @@
+.card {
+  max-width: 28rem;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  border: 1px solid #c7d7e2;
+  border-radius: 14px;
+  background: #f7fbff;
+}
+
+.form-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input {
+  padding: 0.6rem 0.7rem;
+  border: 1px solid #9ab6c9;
+  border-radius: 10px;
+}
+
+button {
+  justify-self: start;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 10px;
+  background: #005d91;
+  color: #fff;
+  font-weight: 700;
+}
+
+.error {
+  color: #9a1a1a;
+  margin: 0;
+}

@@ -1,0 +1,22 @@
+<section class="card">
+  <h2>Dashboard</h2>
+
+  @if (loading()) {
+    <p>Loading profile...</p>
+  } @else if (error()) {
+    <p class="error">{{ error() }}</p>
+  } @else if (user()) {
+    <dl>
+      <dt>Username</dt>
+      <dd>{{ user()!.username }}</dd>
+      <dt>Role</dt>
+      <dd>{{ user()!.role }}</dd>
+      <dt>Status</dt>
+      <dd>{{ user()!.is_active ? 'Active' : 'Inactive' }}</dd>
+      <dt>Created</dt>
+      <dd>{{ user()!.created_at | date: 'medium' }}</dd>
+    </dl>
+  }
+
+  <button type="button" (click)="logout()">Sign out</button>
+</section>

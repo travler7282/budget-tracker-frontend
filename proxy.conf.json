@@ -1,0 +1,10 @@
+{
+  "/api/v1": {
+    "target": "https://api.travler7282.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api/v1": "/budget-tracker/api/v1"
+    }
+  }
+}
