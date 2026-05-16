@@ -44,6 +44,34 @@
   margin-top: 0;
 }
 
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.preview-header h3 {
+  margin: 0;
+}
+
+.preview-header p {
+  margin: 0;
+  color: #4f6775;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+
+.row-invalid td {
+  background: #fff3f3;
+  color: #8c2020;
+}
+
 .toolbelt-actions {
   display: flex;
   gap: 0.6rem;

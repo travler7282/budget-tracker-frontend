@@ -29,6 +29,58 @@
     </div>
   </section>
 
+  @if (importPreviewOpen()) {
+    <section class="card import-preview">
+      <div class="preview-header">
+        <h3>Import Preview</h3>
+        <p>File: {{ importPreviewFileName() }}</p>
+      </div>
+      <p>
+        Valid rows: <strong>{{ validImportCount() }}</strong> /
+        {{ importPreviewRows().length }}
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Budgeted</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of importPreviewRows(); track row.index) {
+              <tr [class.row-invalid]="!row.valid">
+                <td>{{ row.index + 1 }}</td>
+                <td>{{ row.payload.name || 'N/A' }}</td>
+                <td>{{ row.payload.itemType }}</td>
+                <td>{{ row.payload.budgetedAmount | currency }}</td>
+                <td>{{ row.payload.budgetedDate || '-' }}</td>
+                <td>{{ row.valid ? 'Ready' : row.reason }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div class="preview-actions">
+        <button
+          class="btn primary"
+          type="button"
+          (click)="confirmImport()"
+          [disabled]="importing()"
+        >
+          {{ importing() ? 'Importing...' : 'Confirm Import' }}
+        </button>
+        <button class="btn" type="button" (click)="closeImportPreview()" [disabled]="importing()">
+          Cancel
+        </button>
+      </div>
+    </section>
+  }
+
   <div class="summary-cards">
     @for (summary of summaries(); track summary.itemType) {
       <article class="card summary-card">

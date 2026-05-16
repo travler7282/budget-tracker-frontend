@@ -8,6 +8,29 @@ import { BudgetService } from '../services/budget.service';
 
 type CalendarView = 'day' | 'week' | 'month' | 'year' | 'custom';
 type Recurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+interface BudgetPayload {
+  name: string;
+  description: string | null;
+  category: string | null;
+  itemType: BudgetItemType;
+  budgetedDate: string | null;
+  actualDate: string | null;
+  budgetedAmount: number;
+  actualAmount: number | null;
+  interestRate: number | null;
+  isApr: boolean | null;
+  isCreditCard: boolean;
+  isLoan: boolean;
+  isExpense: boolean;
+  isIncome: boolean;
+}
+
+interface ImportPreviewRow {
+  index: number;
+  payload: BudgetPayload;
+  valid: boolean;
+  reason: string | null;
+}
 
 @Component({
   standalone: true,
@@ -40,6 +63,14 @@ export class PlannerPageComponent {
   readonly recurrence = signal<Recurrence>('none');
   readonly recurrenceCount = signal(1);
   readonly importing = signal(false);
+  readonly importPreviewOpen = signal(false);
+  readonly importPreviewRows = signal<ImportPreviewRow[]>([]);
+  readonly importPreviewFileName = signal('');
+  readonly validImportCount = computed(
+    () => this.importPreviewRows().filter((row) => row.valid).length,
+  );
+
+  private importInputRef: HTMLInputElement | null = null;
 
   readonly categoryChart = computed(() => {
     const groups = new Map<string, number>();
@@ -301,6 +332,7 @@ export class PlannerPageComponent {
 
   async importFile(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
+    this.importInputRef = input;
     const file = input.files?.[0];
     if (!file) {
       return;
@@ -320,21 +352,49 @@ export class PlannerPageComponent {
         throw new Error('No rows found to import.');
       }
 
-      forkJoin(payloads.map((payload) => this.budget.createBudgetItem(payload))).subscribe({
-        next: () => {
-          this.importing.set(false);
-          input.value = '';
-          this.info.set(`Imported ${payloads.length} item(s).`);
-          this.refreshAll();
-        },
-        error: () => {
-          this.importing.set(false);
-          this.error.set('Import failed. Ensure your file matches the export format.');
-        },
-      });
+      const previewRows = payloads.map((payload, index) => this.validateImportRow(payload, index));
+      this.importPreviewRows.set(previewRows);
+      this.importPreviewFileName.set(file.name);
+      this.importPreviewOpen.set(true);
+      this.importing.set(false);
+      this.info.set(`Dry-run complete: ${previewRows.length} row(s) ready for review.`);
     } catch (err) {
       this.importing.set(false);
       this.error.set(err instanceof Error ? err.message : 'Import failed.');
+    }
+  }
+
+  confirmImport(): void {
+    const validRows = this.importPreviewRows().filter((row) => row.valid);
+    if (validRows.length === 0) {
+      this.error.set('No valid rows to import.');
+      return;
+    }
+
+    this.importing.set(true);
+    this.error.set(null);
+    this.info.set(null);
+
+    forkJoin(validRows.map((row) => this.budget.createBudgetItem(row.payload))).subscribe({
+      next: () => {
+        this.importing.set(false);
+        this.closeImportPreview();
+        this.info.set(`Imported ${validRows.length} item(s).`);
+        this.refreshAll();
+      },
+      error: () => {
+        this.importing.set(false);
+        this.error.set('Import failed while creating items in backend.');
+      },
+    });
+  }
+
+  closeImportPreview(): void {
+    this.importPreviewOpen.set(false);
+    this.importPreviewRows.set([]);
+    this.importPreviewFileName.set('');
+    if (this.importInputRef) {
+      this.importInputRef.value = '';
     }
   }
 
@@ -385,9 +445,7 @@ export class PlannerPageComponent {
     });
   }
 
-  private createRecurringSeries(
-    basePayload: ReturnType<PlannerPageComponent['buildPayload']>,
-  ): void {
+  private createRecurringSeries(basePayload: BudgetPayload): void {
     const count = this.recurrenceCount();
     const recurrence = this.recurrence();
     const requests = Array.from({ length: count }).map((_, index) => {
@@ -517,7 +575,7 @@ export class PlannerPageComponent {
     return str;
   }
 
-  private parseJsonImport(text: string): Array<ReturnType<PlannerPageComponent['buildPayload']>> {
+  private parseJsonImport(text: string): Array<BudgetPayload> {
     const raw = JSON.parse(text) as
       | { items?: Array<Record<string, unknown>> }
       | Array<Record<string, unknown>>;
@@ -525,7 +583,7 @@ export class PlannerPageComponent {
     return items.map((item) => this.mapImportRow(item));
   }
 
-  private parseCsvImport(text: string): Array<ReturnType<PlannerPageComponent['buildPayload']>> {
+  private parseCsvImport(text: string): Array<BudgetPayload> {
     const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
     if (lines.length <= 1) {
       return [];
@@ -574,9 +632,7 @@ export class PlannerPageComponent {
     return out;
   }
 
-  private mapImportRow(
-    row: Record<string, unknown>,
-  ): ReturnType<PlannerPageComponent['buildPayload']> {
+  private mapImportRow(row: Record<string, unknown>): BudgetPayload {
     const itemType = String(row['itemType'] ?? 'expense') as BudgetItemType;
     return {
       name: String(row['name'] ?? '').trim(),
@@ -594,6 +650,16 @@ export class PlannerPageComponent {
       isExpense: this.toBoolean(row['isExpense']),
       isIncome: this.toBoolean(row['isIncome']),
     };
+  }
+
+  private validateImportRow(payload: BudgetPayload, index: number): ImportPreviewRow {
+    if (!payload.name.trim()) {
+      return { index, payload, valid: false, reason: 'Name is required.' };
+    }
+    if (!Number.isFinite(payload.budgetedAmount) || payload.budgetedAmount < 0) {
+      return { index, payload, valid: false, reason: 'Budgeted amount must be 0 or greater.' };
+    }
+    return { index, payload, valid: true, reason: null };
   }
 
   private toNullableString(value: unknown): string | null {
