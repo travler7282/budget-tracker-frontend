@@ -7,6 +7,27 @@
   @if (error()) {
     <p class="error-banner">{{ error() }}</p>
   }
+  @if (info()) {
+    <p class="info-banner">{{ info() }}</p>
+  }
+
+  <section class="card toolbelt">
+    <h3>Import / Export</h3>
+    <p>Export current items or import a previously exported CSV/JSON file.</p>
+    <div class="toolbelt-actions">
+      <button class="btn" type="button" (click)="exportJson()">Export JSON</button>
+      <button class="btn" type="button" (click)="exportCsv()">Export CSV</button>
+      <label class="import-btn">
+        Import CSV/JSON
+        <input
+          type="file"
+          accept=".json,.csv"
+          (change)="importFile($event)"
+          [disabled]="importing()"
+        />
+      </label>
+    </div>
+  </section>
 
   <div class="summary-cards">
     @for (summary of summaries(); track summary.itemType) {
@@ -63,6 +84,30 @@
           Actual Date
           <input type="date" formControlName="actualDate" />
         </label>
+
+        @if (!selectedItemId()) {
+          <label>
+            Recurrence
+            <select [value]="recurrence()" (change)="setRecurrence($any($event.target).value)">
+              <option value="none">One-time</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+
+          <label>
+            Occurrences
+            <input
+              type="number"
+              min="1"
+              max="120"
+              [value]="recurrenceCount()"
+              (input)="setRecurrenceCount($any($event.target).value)"
+            />
+          </label>
+        }
 
         <label class="full-row">
           Description
@@ -211,5 +256,51 @@
         </table>
       </div>
     }
+  </section>
+
+  <section class="card charts-card">
+    <h3>Insights</h3>
+    <div class="charts-grid">
+      <article>
+        <h4>Top Categories (Planned)</h4>
+        @if (categoryChart().length === 0) {
+          <p class="muted">No data yet.</p>
+        } @else {
+          <ul class="category-bars">
+            @for (bar of categoryChart(); track bar.label) {
+              <li>
+                <div class="bar-label">
+                  <span>{{ bar.label }}</span>
+                  <strong>{{ bar.total | currency }}</strong>
+                </div>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="bar.widthPercent"></div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <article>
+        <h4>Balance Trend</h4>
+        @if (!balanceTrend().planned) {
+          <p class="muted">No calendar range data yet.</p>
+        } @else {
+          <svg
+            viewBox="0 0 520 180"
+            class="trend-chart"
+            aria-label="Planned and actual balance trend"
+          >
+            <polyline [attr.points]="balanceTrend().planned" class="line-planned"></polyline>
+            <polyline [attr.points]="balanceTrend().actual" class="line-actual"></polyline>
+          </svg>
+          <div class="legend">
+            <span><i class="dot planned"></i> Planned</span>
+            <span><i class="dot actual"></i> Actual</span>
+          </div>
+        }
+      </article>
+    </div>
   </section>
 </section>
