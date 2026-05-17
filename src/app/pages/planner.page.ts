@@ -2,6 +2,7 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { CalculatorModalComponent } from '../modals/calculator-modal.component';
 
 import { BudgetItem, BudgetItemType, BudgetSummary, CashFlowDay } from '../models/budget.models';
 import { BudgetService } from '../services/budget.service';
@@ -35,7 +36,7 @@ interface ImportPreviewRow {
 @Component({
   standalone: true,
   selector: 'app-planner-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CalculatorModalComponent],
   templateUrl: './planner.page.html',
   styleUrl: './planner.page.scss',
 })
@@ -117,6 +118,16 @@ export class PlannerPageComponent {
     'investment',
     'other',
   ];
+
+  readonly calculatorModalOpen = signal(false);
+
+  openCalculatorModal(): void {
+    this.calculatorModalOpen.set(true);
+  }
+
+  closeCalculatorModal(): void {
+    this.calculatorModalOpen.set(false)
+  }
 
   readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],

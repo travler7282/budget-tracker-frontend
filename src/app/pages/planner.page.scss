@@ -327,6 +327,36 @@ td {
   white-space: nowrap;
 }
 
+.input-with-calculator {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.input-with-calculator .input-field {
+  flex: 1;
+}
+
+.calculator-icon-btn {
+  padding: 0.6rem 0.8rem;
+  background: #f0f4f8;
+  border: 1px solid #c8dbe8;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: #e0ecf1;
+    border-color: #0d7c93;
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 @media (max-width: 980px) {
   .layout-grid {
     grid-template-columns: 1fr;

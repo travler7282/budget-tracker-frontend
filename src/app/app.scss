@@ -28,6 +28,14 @@
   margin: 0;
   font-size: 1.25rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-icon {
+  border-radius: 5px;
+  flex-shrink: 0;
 }
 
 .app-header nav {

@@ -1,0 +1,82 @@
+.compound-calculator {
+  padding: 1rem;
+  
+  h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #0d2735;
+  }
+}
+
+.input-group {
+  margin-bottom: 1rem;
+  
+  label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #0d2735;
+  }
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #c8dbe8;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #0d7c93;
+    box-shadow: 0 0 0 3px rgba(13, 124, 147, 0.1);
+  }
+}
+
+.calculate-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: #0d7c93;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 1.5rem 0;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #0a5f73;
+  }
+}
+
+.results {
+  padding: 1rem;
+  background: #f0f8fa;
+  border-radius: 6px;
+  border: 1px solid #c8dbe8;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.result-row span:first-child {
+  font-weight: 600;
+  color: #0d2735;
+}
+
+.value {
+  color: #0d7c93;
+  font-weight: 700;
+}

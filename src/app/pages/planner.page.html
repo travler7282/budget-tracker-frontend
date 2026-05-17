@@ -119,7 +119,23 @@
 
         <label>
           Budgeted Amount
-          <input type="number" step="0.01" formControlName="budgetedAmount" />
+          <div class="input-with-calculator">
+            <input
+              type="number"
+              formControlName="budgetedAmount"
+              placeholder="Budgeted amount"
+              class="input-field"
+            />
+            <button
+              type="button"
+              (click)="openCalculatorModal()"
+              class="calculator-icon-btn"
+              title="Open calculator"
+              aria-label="Open calculator"
+            >
+              🧮
+            </button>
+          </div>
         </label>
 
         <label>
@@ -364,3 +380,7 @@
     </div>
   </section>
 </section>
+<app-calculator-modal
+  [isOpen]="calculatorModalOpen()"
+  (close)="closeCalculatorModal()"
+></app-calculator-modal>

@@ -5,6 +5,8 @@
   "compilerOptions": {
     "module": "ES2022",
     "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "rootDir": "./src",
     "outDir": "./out-tsc/app",
     "types": []
