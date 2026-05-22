@@ -55,16 +55,16 @@
   align-items: center;
 }
 
-.import-btn {
-  position: relative;
-  overflow: hidden;
-}
-
-.import-btn input {
+.hidden-file-input {
   position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .error-banner,
@@ -231,7 +231,48 @@
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
-  align-items: start;
+  align-items: center;
+}
+
+.day-number-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.day-number-wrap strong {
+  font-size: 0.9rem;
+  line-height: 1.05;
+  font-weight: 800;
+}
+
+.cell-topline > span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #466172;
+  background: #e8f2f8;
+  border: 1px solid #cfe0ea;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  white-space: nowrap;
+}
+
+.weekday-abbrev {
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: #4f6778;
+  background: #eef5fa;
+  border: 1px solid #d7e5ee;
+  border-radius: 999px;
+  padding: 0.08rem 0.32rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.outside-month .day-number-wrap strong {
+  color: #698090;
 }
 
 .day-metrics {
@@ -340,7 +381,6 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 0.2rem;
-  scrollbar-gutter: stable;
 }
 
 .detailed-chart {
@@ -425,17 +465,12 @@
 }
 
 @media (max-width: 1024px) {
-  .setup-grid,
-  .calendar-grid {
+  .setup-grid {
     grid-template-columns: 1fr;
   }
 
   .insights-grid {
     grid-template-columns: 1fr;
-  }
-
-  .weekday-row {
-    display: none;
   }
 
   .ledger-card {
@@ -534,6 +569,10 @@
   .summary-strip,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .weekday-row {
+    display: none;
   }
 
   .calendar-cell {

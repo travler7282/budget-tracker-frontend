@@ -10,10 +10,19 @@
 
     <div class="explorer-actions">
       <button class="btn" type="button" (click)="resetCalendar()">Reset Calendar</button>
-      <label class="btn import-btn">
+      <button class="btn" type="button" (click)="exportJson()">Export JSON</button>
+      <button class="btn" type="button" (click)="exportCsv()">Export CSV</button>
+      <button class="btn" type="button" (click)="importInput.click()" [disabled]="importing()">
         Import JSON/CSV
-        <input type="file" accept=".json,.csv,application/json,text/csv" (change)="importFile($event)" [disabled]="importing()" />
-      </label>
+      </button>
+      <input
+        #importInput
+        class="hidden-file-input"
+        type="file"
+        accept=".json,.csv,application/json,text/csv"
+        (change)="importFile($event)"
+        [disabled]="importing()"
+      />
     </div>
   </div>
 
@@ -175,7 +184,10 @@
           (click)="selectDate(cell.date)"
         >
           <div class="cell-topline">
-            <strong>{{ cell.date.slice(8, 10) }}</strong>
+            <div class="day-number-wrap" [attr.title]="cell.date | date: 'fullDate'">
+              <strong>{{ cell.date | date: 'MMM d' }}</strong>
+              <span class="weekday-abbrev">{{ cell.date | date: 'EEE' }}</span>
+            </div>
             @if (cell.transactions.length > 0) {
               <span>{{ cell.transactions.length }} txn</span>
             }
@@ -438,7 +450,24 @@
       <div class="period-chart-wrap">
         <div class="chart-header">
           <h4>Cash Flow Through Entered Period</h4>
-          <p class="muted chart-hint">Use zoom or horizontal scroll to inspect dense ranges.</p>
+          <div class="chart-zoom-controls" aria-label="Cash flow chart zoom controls">
+            <button class="btn small" type="button" (click)="zoomOutCharts()" [disabled]="chartZoom() <= minChartZoom">-</button>
+            <label>
+              Zoom
+              <input
+                type="range"
+                [min]="minChartZoom"
+                [max]="maxChartZoom"
+                step="0.01"
+                [value]="chartZoom()"
+                (input)="setChartZoom($any($event.target).valueAsNumber)"
+              />
+            </label>
+            <span class="zoom-label">{{ (chartZoom() * 100).toFixed(0) }}%</span>
+            <button class="btn small" type="button" (click)="zoomInCharts()" [disabled]="chartZoom() >= maxChartZoom">+</button>
+            <button class="btn small" type="button" (click)="resetChartZoom()" [disabled]="chartZoom() === 1">Reset</button>
+            <button class="btn small" type="button" (click)="fitChartsToDates()" [disabled]="chartPointCount() <= 1">Fit all dates</button>
+          </div>
         </div>
         @if (!cashFlowChart().linePoints) {
           <p class="muted">No chart data yet.</p>
