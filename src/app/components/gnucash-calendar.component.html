@@ -1,0 +1,484 @@
+<section class="card ledger-card">
+  <div class="explorer-header">
+    <div>
+      <h3>Manual Cash Calendar</h3>
+      <p>
+        Set an opening balance on a starting date, add deposits and withdrawals, and track the
+        running balance on a month-by-month calendar.
+      </p>
+    </div>
+
+    <div class="explorer-actions">
+      <button class="btn" type="button" (click)="resetCalendar()">Reset Calendar</button>
+      <label class="btn import-btn">
+        Import JSON/CSV
+        <input type="file" accept=".json,.csv,application/json,text/csv" (change)="importFile($event)" [disabled]="importing()" />
+      </label>
+    </div>
+  </div>
+
+  <p class="muted hint">
+    Entries are stored locally in this browser only. Nothing is sent to the budget API.
+  </p>
+
+  @if (error()) {
+    <p class="error-banner">{{ error() }}</p>
+  }
+
+  @if (info()) {
+    <p class="info-banner">{{ info() }}</p>
+  }
+
+  <div class="setup-grid">
+    <section class="form-card">
+      <h4>Opening Balance</h4>
+      <form [formGroup]="settingsForm" (ngSubmit)="applyStartingBalance()" class="form-grid">
+        <label>
+          Starting date
+          <input type="date" formControlName="startingDate" />
+        </label>
+
+        <label>
+          Starting balance
+          <input type="number" step="0.01" formControlName="startingBalance" />
+        </label>
+
+        <button class="btn primary full-span" type="submit">Apply Opening Balance</button>
+      </form>
+    </section>
+
+    <section class="form-card">
+      <h4>Add Transaction</h4>
+      <form [formGroup]="transactionForm" (ngSubmit)="addTransaction()" class="form-grid">
+        <label>
+          Transaction date
+          <input type="date" formControlName="date" />
+        </label>
+
+        <label>
+          Type
+          <select formControlName="kind">
+            <option value="withdrawal">Withdrawal</option>
+            <option value="deposit">Deposit</option>
+          </select>
+        </label>
+
+        <label>
+          Name
+          <input type="text" formControlName="name" placeholder="Rent, Paycheck, Groceries" />
+        </label>
+
+        <label>
+          Category
+          <input type="text" formControlName="category" placeholder="Bills, Food, Income" />
+        </label>
+
+        <label>
+          Amount
+          <input type="number" step="0.01" formControlName="amount" />
+        </label>
+
+        <label class="full-span">
+          Description
+          <textarea rows="3" formControlName="description"></textarea>
+        </label>
+
+        <div class="form-actions full-span">
+          <button class="btn primary" type="submit">
+            {{ isEditing() ? 'Update Transaction' : 'Add Transaction' }}
+          </button>
+          @if (isEditing()) {
+            <button class="btn" type="button" (click)="cancelEdit()">Cancel Edit</button>
+          }
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="summary-strip">
+    <article>
+      <span>Starting date</span>
+      <strong>{{ state().startingDate | date: 'mediumDate' }}</strong>
+    </article>
+    <article>
+      <span>Opening balance</span>
+      <strong>{{ rangeTotals().openingBalance | currency }}</strong>
+    </article>
+    <article>
+      <span>Income</span>
+      <strong class="amount-positive">{{ rangeTotals().income | currency }}</strong>
+    </article>
+    <article>
+      <span>Expenses</span>
+      <strong class="amount-negative">{{ rangeTotals().expenses | currency }}</strong>
+    </article>
+    <article>
+      <span>Current balance</span>
+      <strong>{{ rangeTotals().closingBalance | currency }}</strong>
+    </article>
+  </div>
+
+    <div class="summary-strip summary-grid">
+      @for (group of categorySummary(); track group.category) {
+        <article>
+          <span>{{ group.category }}</span>
+          <strong>{{ group.net | currency }}</strong>
+          <p class="muted compact-summary">
+            {{ group.count }} transaction(s) · +{{ group.income | currency }} / -{{ group.expenses | currency }}
+          </p>
+        </article>
+      }
+    </div>
+
+  @if (monthKeys().length === 0) {
+    <p class="muted">Set a starting date to begin the calendar.</p>
+  } @else {
+    <div class="calendar-nav">
+      <button
+        class="btn nav-btn"
+        type="button"
+        (click)="goToPreviousMonth()"
+        [disabled]="!canGoToPreviousMonth()"
+      >
+        ←
+      </button>
+      <div>
+        <h4>{{ visibleMonthLabel() }}</h4>
+        <p>{{ visibleMonthIndex() + 1 }} / {{ monthKeys().length }} month(s)</p>
+      </div>
+      <button
+        class="btn nav-btn"
+        type="button"
+        (click)="goToNextMonth()"
+        [disabled]="!canGoToNextMonth()"
+      >
+        →
+      </button>
+    </div>
+
+    <div class="weekday-row" aria-hidden="true">
+      @for (weekDay of weekDays; track weekDay) {
+        <span>{{ weekDay }}</span>
+      }
+    </div>
+
+    <p class="muted compact-legend-note">
+      Tile values are compact for readability. Hover over amounts to see the full value.
+    </p>
+
+    <div class="calendar-grid">
+      @for (cell of visibleMonthCells(); track cell.key) {
+        <article
+          class="calendar-cell"
+          [class.outside-month]="!cell.inMonth"
+          [class.selected-cell]="isSelectedDate(cell.date)"
+          (click)="selectDate(cell.date)"
+        >
+          <div class="cell-topline">
+            <strong>{{ cell.date.slice(8, 10) }}</strong>
+            @if (cell.transactions.length > 0) {
+              <span>{{ cell.transactions.length }} txn</span>
+            }
+          </div>
+
+          <dl class="day-metrics">
+            <div>
+              <dt>Prev</dt>
+              <dd [attr.title]="formatFullAmount(cell.openingBalance)">{{ formatCellAmount(cell.openingBalance) }}</dd>
+            </div>
+            <div>
+              <dt>In</dt>
+              <dd class="amount-positive" [attr.title]="formatFullAmount(cell.income)">{{ formatCellAmount(cell.income) }}</dd>
+            </div>
+            <div>
+              <dt>Out</dt>
+              <dd class="amount-negative" [attr.title]="formatFullAmount(cell.expenses)">{{ formatCellAmount(cell.expenses) }}</dd>
+            </div>
+            <div>
+              <dt>Bal</dt>
+              <dd [attr.title]="formatFullAmount(cell.closingBalance)">{{ formatCellAmount(cell.closingBalance) }}</dd>
+            </div>
+          </dl>
+
+          <div class="transaction-list">
+            @for (transaction of cell.transactions; track transaction.id) {
+              <div class="transaction-row">
+                <div>
+                  <strong>{{ transaction.name }}</strong>
+                  @if (transaction.description) {
+                    <span>{{ transaction.description }}</span>
+                  }
+                </div>
+                <strong
+                  [class.amount-positive]="isDeposit(transaction.amount)"
+                  [class.amount-negative]="!isDeposit(transaction.amount)"
+                  [attr.title]="formatFullAmount(transaction.amount)"
+                >
+                  {{ formatCellAmount(transaction.amount) }}
+                </strong>
+              </div>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    <div class="insights-grid">
+      <article class="insight-card trend-card">
+        <div class="chart-header">
+          <h4>Running Balance</h4>
+          <div class="chart-zoom-controls" aria-label="Chart zoom controls">
+            <button class="btn small" type="button" (click)="zoomOutCharts()" [disabled]="chartZoom() <= minChartZoom">-</button>
+            <label>
+              Zoom
+              <input
+                type="range"
+                [min]="minChartZoom"
+                [max]="maxChartZoom"
+                step="0.01"
+                [value]="chartZoom()"
+                (input)="setChartZoom($any($event.target).valueAsNumber)"
+              />
+            </label>
+            <span class="zoom-label">{{ (chartZoom() * 100).toFixed(0) }}%</span>
+            <button class="btn small" type="button" (click)="zoomInCharts()" [disabled]="chartZoom() >= maxChartZoom">+</button>
+            <button class="btn small" type="button" (click)="resetChartZoom()" [disabled]="chartZoom() === 1">Reset</button>
+            <button class="btn small" type="button" (click)="fitChartsToDates()" [disabled]="chartPointCount() <= 1">Fit all dates</button>
+          </div>
+        </div>
+        @if (!balanceTrendChart().linePoints) {
+          <p class="muted">No balance data yet.</p>
+        } @else {
+          <div class="chart-scroll">
+            <svg
+              [attr.viewBox]="'0 0 ' + balanceTrendChart().width + ' ' + balanceTrendChart().height"
+              [attr.width]="balanceTrendChart().width"
+              [attr.height]="balanceTrendChart().height"
+              class="trend-chart detailed-chart"
+              aria-label="Running balance trend"
+            >
+              @for (tick of balanceTrendChart().yTicks; track tick.label) {
+                <line x1="78" [attr.y1]="tick.y" [attr.x2]="balanceTrendChart().width - 28" [attr.y2]="tick.y" class="chart-grid-line"></line>
+                <text x="72" [attr.y]="tick.y + 4" text-anchor="end" class="chart-axis-label">{{ tick.label }}</text>
+              }
+
+              <polyline [attr.points]="balanceTrendChart().linePoints" class="trend-line"></polyline>
+
+              @for (point of balanceTrendChart().points; track point.key) {
+                <circle [attr.cx]="point.x" [attr.cy]="point.y" r="4" class="chart-point" [class.point-opening]="point.tone === 'opening'"></circle>
+                <title>{{ point.tooltip }}</title>
+
+                @if (point.showLabel) {
+                  <text [attr.x]="point.x" [attr.y]="balanceTrendChart().height - 18" text-anchor="middle" class="chart-axis-label x-axis-label">{{ point.label }}</text>
+                  <text [attr.x]="point.x" [attr.y]="point.y - 10" text-anchor="middle" class="chart-value-label">{{ point.amountLabel }}</text>
+                }
+              }
+            </svg>
+          </div>
+        }
+      </article>
+
+      <article class="insight-card detail-card">
+        <h4>Selected Day</h4>
+        @if (!selectedDaySummary()) {
+          <p class="muted">Choose a day to inspect its transactions.</p>
+        } @else {
+          <p class="detail-date">{{ selectedDaySummary()!.date | date: 'fullDate' }}</p>
+          <dl class="day-metrics detail-metrics">
+            <div>
+              <dt>Prev balance</dt>
+              <dd>{{ selectedDaySummary()!.openingBalance | currency }}</dd>
+            </div>
+            <div>
+              <dt>Income</dt>
+              <dd class="amount-positive">{{ selectedDaySummary()!.income | currency }}</dd>
+            </div>
+            <div>
+              <dt>Expenses</dt>
+              <dd class="amount-negative">{{ selectedDaySummary()!.expenses | currency }}</dd>
+            </div>
+            <div>
+              <dt>Closing balance</dt>
+              <dd>{{ selectedDaySummary()!.closingBalance | currency }}</dd>
+            </div>
+          </dl>
+
+          @if (selectedDaySummary()!.transactions.length === 0) {
+            <p class="muted">No transactions on this day.</p>
+          } @else {
+            <div class="transaction-list detail-list">
+              @for (transaction of selectedDaySummary()!.transactions; track transaction.id) {
+                <div class="transaction-row detail-row">
+                  <div>
+                    <strong>{{ transaction.name }}</strong>
+                    @if (transaction.description) {
+                      <span>{{ transaction.description }}</span>
+                    }
+                  </div>
+                  <div class="detail-actions">
+                    <strong
+                      [class.amount-positive]="isDeposit(transaction.amount)"
+                      [class.amount-negative]="!isDeposit(transaction.amount)"
+                    >
+                      {{ transaction.amount | currency }}
+                    </strong>
+                    <button class="btn small" type="button" (click)="editTransaction(transaction.id)">
+                      Edit
+                    </button>
+                    <button class="btn small danger" type="button" (click)="removeTransaction(transaction.id)">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </article>
+
+      <article class="insight-card history-card">
+        <div class="section-heading-actions">
+          <h4>Saved Transactions</h4>
+          <div class="explorer-actions">
+            <button class="btn small" type="button" (click)="exportJson()">Export JSON</button>
+            <button class="btn small" type="button" (click)="exportCsv()">Export CSV</button>
+          </div>
+        </div>
+        @if (transactions().length === 0) {
+          <p class="muted">No transactions entered yet.</p>
+        } @else {
+          <div class="transaction-list detail-list">
+            @for (transaction of transactions(); track transaction.id) {
+              <div class="transaction-row detail-row">
+                <div>
+                  <strong>{{ transaction.date | date: 'mediumDate' }} · {{ transaction.name }}</strong>
+                  @if (transaction.category) {
+                    <span>Category: {{ transaction.category }}</span>
+                  }
+                  @if (transaction.description) {
+                    <span>{{ transaction.description }}</span>
+                  }
+                </div>
+                <div class="detail-actions">
+                  <strong
+                    [class.amount-positive]="isDeposit(transaction.amount)"
+                    [class.amount-negative]="!isDeposit(transaction.amount)"
+                  >
+                    {{ transaction.amount | currency }}
+                  </strong>
+                  <button class="btn small" type="button" (click)="editTransaction(transaction.id)">Edit</button>
+                  <button
+                    class="btn small"
+                    type="button"
+                    (click)="moveTransaction(transaction.id, -1)"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    class="btn small"
+                    type="button"
+                    (click)="moveTransaction(transaction.id, 1)"
+                  >
+                    ↓
+                  </button>
+                  <button class="btn small danger" type="button" (click)="removeTransaction(transaction.id)">
+                    Delete
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </article>
+    </div>
+
+    <section class="card period-summary-card">
+      <div class="section-heading-actions">
+        <div>
+          <h4>Entered Period Summary</h4>
+          <p class="muted">
+            From {{ state().startingDate | date: 'mediumDate' }} through the latest transaction.
+          </p>
+        </div>
+        <div class="explorer-actions">
+          <button class="btn small" type="button" (click)="exportJson()">Export JSON</button>
+          <button class="btn small" type="button" (click)="exportCsv()">Export CSV</button>
+        </div>
+      </div>
+
+      <div class="summary-strip period-summary-grid">
+        <article>
+          <span>Transactions</span>
+          <strong>{{ transactionCount() }}</strong>
+        </article>
+        <article>
+          <span>Starting balance</span>
+          <strong>{{ rangeTotals().openingBalance | currency }}</strong>
+        </article>
+        <article>
+          <span>Total income</span>
+          <strong class="amount-positive">{{ rangeTotals().income | currency }}</strong>
+        </article>
+        <article>
+          <span>Total expenses</span>
+          <strong class="amount-negative">{{ rangeTotals().expenses | currency }}</strong>
+        </article>
+        <article>
+          <span>Ending balance</span>
+          <strong>{{ rangeTotals().closingBalance | currency }}</strong>
+        </article>
+        <article>
+          <span>Net change</span>
+          <strong [class.amount-positive]="rangeTotals().closingBalance - rangeTotals().openingBalance >= 0" [class.amount-negative]="rangeTotals().closingBalance - rangeTotals().openingBalance < 0">
+            {{ (rangeTotals().closingBalance - rangeTotals().openingBalance) | currency }}
+          </strong>
+        </article>
+      </div>
+
+      <div class="period-chart-wrap">
+        <div class="chart-header">
+          <h4>Cash Flow Through Entered Period</h4>
+          <p class="muted chart-hint">Use zoom or horizontal scroll to inspect dense ranges.</p>
+        </div>
+        @if (!cashFlowChart().linePoints) {
+          <p class="muted">No chart data yet.</p>
+        } @else {
+          <div class="chart-scroll">
+            <svg
+              [attr.viewBox]="'0 0 ' + cashFlowChart().width + ' ' + cashFlowChart().height"
+              [attr.width]="cashFlowChart().width"
+              [attr.height]="cashFlowChart().height"
+              class="trend-chart detailed-chart"
+              aria-label="Cash flow trend through entered period"
+            >
+              @for (tick of cashFlowChart().yTicks; track tick.label) {
+                <line x1="78" [attr.y1]="tick.y" [attr.x2]="cashFlowChart().width - 28" [attr.y2]="tick.y" class="chart-grid-line"></line>
+                <text x="72" [attr.y]="tick.y + 4" text-anchor="end" class="chart-axis-label">{{ tick.label }}</text>
+              }
+
+              <polyline [attr.points]="cashFlowChart().linePoints" class="trend-line"></polyline>
+
+              @for (point of cashFlowChart().points; track point.key) {
+                <circle
+                  [attr.cx]="point.x"
+                  [attr.cy]="point.y"
+                  r="4"
+                  class="chart-point"
+                  [class.point-opening]="point.tone === 'opening'"
+                  [class.point-positive]="point.tone === 'positive'"
+                  [class.point-negative]="point.tone === 'negative'"
+                ></circle>
+                <title>{{ point.tooltip }}</title>
+
+                @if (point.showLabel) {
+                  <text [attr.x]="point.x" [attr.y]="cashFlowChart().height - 18" text-anchor="middle" class="chart-axis-label x-axis-label">{{ point.label }}</text>
+                  <text [attr.x]="point.x" [attr.y]="point.y - 10" text-anchor="middle" class="chart-value-label">{{ point.amountLabel }}</text>
+                }
+              }
+            </svg>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -22,9 +22,9 @@ import { AuthService } from './services/auth.service';
       </h1>
       @if (!isLoginRoute()) {
         <nav>
+          <a routerLink="/planner">Planner</a>
           @if (isAuthenticated()) {
             <a routerLink="/dashboard">Dashboard</a>
-            <a routerLink="/planner">Planner</a>
             @if (isAdmin()) {
               <a routerLink="/admin/users">Users</a>
             }

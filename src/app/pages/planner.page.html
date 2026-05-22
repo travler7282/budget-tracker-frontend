@@ -1,8 +1,19 @@
 <section class="planner-page">
   <header class="page-top">
     <h2>Budget Planner</h2>
-    <p>Manage your budget items and review projected vs actual cash flow.</p>
+    <p>Manage your budget items and review projected vs actual cash flow with a local transaction calendar.</p>
   </header>
+
+  <app-manual-calendar />
+
+  @if (!isAuthenticated()) {
+    <section class="card local-only-card">
+      <h3>Signed-in planner tools</h3>
+      <p>
+        The manual calendar above works entirely in the browser. Sign in when you want to use the API-backed budget items, summaries, and cash-flow tools below.
+      </p>
+    </section>
+  } @else {
 
   @if (error()) {
     <p class="error-banner">{{ error() }}</p>
@@ -379,8 +390,9 @@
       </article>
     </div>
   </section>
+  <app-calculator-modal
+    [isOpen]="calculatorModalOpen()"
+    (close)="closeCalculatorModal()"
+  ></app-calculator-modal>
+  }
 </section>
-<app-calculator-modal
-  [isOpen]="calculatorModalOpen()"
-  (close)="closeCalculatorModal()"
-></app-calculator-modal>

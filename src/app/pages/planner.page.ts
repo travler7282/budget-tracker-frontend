@@ -2,9 +2,11 @@ import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { ManualCalendarComponent } from '../components/gnucash-calendar.component';
 import { CalculatorModalComponent } from '../modals/calculator-modal.component';
 
 import { BudgetItem, BudgetItemType, BudgetSummary, CashFlowDay } from '../models/budget.models';
+import { AuthService } from '../services/auth.service';
 import { BudgetService } from '../services/budget.service';
 
 type CalendarView = 'day' | 'week' | 'month' | 'year' | 'custom';
@@ -36,11 +38,19 @@ interface ImportPreviewRow {
 @Component({
   standalone: true,
   selector: 'app-planner-page',
-  imports: [CommonModule, ReactiveFormsModule, CurrencyPipe, DatePipe, CalculatorModalComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    CurrencyPipe,
+    DatePipe,
+    CalculatorModalComponent,
+    ManualCalendarComponent,
+  ],
   templateUrl: './planner.page.html',
   styleUrl: './planner.page.scss',
 })
 export class PlannerPageComponent {
+  private readonly auth = inject(AuthService);
   private readonly budget = inject(BudgetService);
   private readonly fb = inject(FormBuilder);
 
@@ -67,6 +77,7 @@ export class PlannerPageComponent {
   readonly importPreviewOpen = signal(false);
   readonly importPreviewRows = signal<ImportPreviewRow[]>([]);
   readonly importPreviewFileName = signal('');
+  readonly isAuthenticated = computed(() => this.auth.isAuthenticated());
   readonly validImportCount = computed(
     () => this.importPreviewRows().filter((row) => row.valid).length,
   );
@@ -151,7 +162,9 @@ export class PlannerPageComponent {
   );
 
   constructor() {
-    this.refreshAll();
+    if (this.isAuthenticated()) {
+      this.refreshAll();
+    }
   }
 
   refreshAll(): void {
